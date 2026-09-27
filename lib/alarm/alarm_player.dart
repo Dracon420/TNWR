@@ -61,9 +61,11 @@ class _AudioplayersPlayer implements AlarmPlayer {
 
   @override
   Future<void> loop(String asset) async {
-    if (!_configured && Platform.isAndroid) {
-      // Alarm usage: plays on the alarm stream, which silent and vibrate
-      // mode don't mute, and which SystemVolume raises.
+    if (!_configured && (Platform.isAndroid || Platform.isIOS)) {
+      // Android: alarm usage plays on the alarm stream, which silent and
+      // vibrate mode don't mute, and which SystemVolume raises.
+      // iPhone: the playback category ignores the silent switch and, with
+      // the audio background mode, keeps ringing when the phone locks.
       await _player.setAudioContext(AudioContext(
         android: const AudioContextAndroid(
           usageType: AndroidUsageType.alarm,
@@ -71,6 +73,7 @@ class _AudioplayersPlayer implements AlarmPlayer {
           audioFocus: AndroidAudioFocus.gainTransient,
           stayAwake: true,
         ),
+        iOS: AudioContextIOS(category: AVAudioSessionCategory.playback),
       ));
     }
     _configured = true;

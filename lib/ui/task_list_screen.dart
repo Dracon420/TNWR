@@ -67,7 +67,7 @@ class TaskListScreen extends StatelessWidget {
           if (tasks.isEmpty) {
             return Column(
               children: [
-                if (controller.engine case final AndroidAlarmEngine engine)
+                if (controller.engine case final PhoneSetup engine)
                   PhoneSetupBanner(engine: engine),
                 const Expanded(
                   child: Center(
@@ -88,7 +88,7 @@ class TaskListScreen extends StatelessWidget {
             padding: EdgeInsets.only(
                 bottom: 96 + MediaQuery.viewPaddingOf(context).bottom),
             children: [
-              if (controller.engine case final AndroidAlarmEngine engine)
+              if (controller.engine case final PhoneSetup engine)
                 PhoneSetupBanner(engine: engine),
               for (final t in active) _tile(context, t),
               if (done.isNotEmpty) ...[

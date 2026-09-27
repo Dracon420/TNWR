@@ -26,6 +26,16 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAlarmKitUsageDescription</key>
+	<string>T.N.W.R. rings your reminders as alarms, even when the app is closed, until you prove they are done.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>T.N.W.R. uses the camera to scan a code or take a photo as proof that a task is done.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>T.N.W.R. checks that you are at the right place when a reminder asks for it.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>T.N.W.R. counts your steps when a reminder asks you to walk.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>T.N.W.R. lets you pick a photo as proof that a task is done.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -49,6 +59,10 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

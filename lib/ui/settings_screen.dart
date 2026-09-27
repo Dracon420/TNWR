@@ -30,7 +30,7 @@ class SettingsScreen extends StatelessWidget {
         builder: (context, _) => ListView(
           padding: screenListPadding(context),
           children: [
-            if (engine case final AndroidAlarmEngine engine) ...[
+            if (engine case final PhoneSetup engine) ...[
               section('Background alarms'),
               ListTile(
                 contentPadding: EdgeInsets.zero,

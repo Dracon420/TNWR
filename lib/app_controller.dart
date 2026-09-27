@@ -28,6 +28,8 @@ abstract class AlarmSurface {
 /// With an [AlarmEngine] that owns ringing (Android), the OS engine plays the
 /// sound, escalates and handles calls, so alarms ring with the app closed;
 /// this class keeps the engine's schedule in sync and tells it when to stop.
+/// An engine that doesn't own ringing (iPhone) is still told what rings and
+/// what's held, so its system alarms take over if the app is closed.
 class AppController extends ChangeNotifier {
   AppController(
     this.store,
@@ -131,6 +133,8 @@ class AppController extends ChangeNotifier {
         return;
       }
 
+      if (!_engineRings) await engine?.ring(ringing);
+
       if (_holdUntil != null) {
         if (ringing.id == _holdTaskId && now.isBefore(_holdUntil!)) {
           notifyListeners(); // Countdown on the alarm screen.
@@ -208,11 +212,8 @@ class AppController extends ChangeNotifier {
     _holdStarted ??= now; // A re-sent photo keeps the original start.
     _holdTaskId = t.id;
     _holdUntil = now.add(wait);
-    if (_engineRings) {
-      await engine!.hold(t.id, _holdUntil!);
-    } else {
-      await _silence();
-    }
+    await engine?.hold(t.id, _holdUntil!);
+    if (!_engineRings) await _silence();
     notifyListeners();
   }
 
@@ -227,7 +228,7 @@ class AppController extends ChangeNotifier {
     _holdTaskId = _holdStarted = _holdUntil = null;
     // Silent time doesn't count toward escalation.
     await _shiftStart(id, held);
-    if (_engineRings) await engine!.releaseHold(id);
+    await engine?.releaseHold(id);
     notifyListeners();
   }
 
@@ -274,19 +275,20 @@ class AppController extends ChangeNotifier {
 
   Future<void> snooze(NagTask t) async {
     if (!canSnooze(t)) return;
-    await engine?.stop(t.id);
+    // Store first: a tick landing while the engine stops must not see the
+    // task still ringing and start it again.
     await store.upsert(_freshRing(t).copyWith(
       status: TaskStatus.scheduled,
       dueAt: _now().add(Duration(minutes: t.escalation.snoozeMinutes)),
       ringingSince: () => null,
       snoozesUsed: t.snoozesUsed + 1,
     ));
+    await engine?.stop(t.id);
     await tick();
   }
 
   /// Called once the task's proofs are satisfied.
   Future<void> complete(NagTask t) async {
-    await engine?.stop(t.id);
     final now = _now();
     final next = nextOccurrence(t.repeat, t.dueAt, now);
     await store.upsert(_freshRing(t).copyWith(
@@ -296,6 +298,7 @@ class AppController extends ChangeNotifier {
       snoozesUsed: 0,
       completedAt: () => now,
     ));
+    await engine?.stop(t.id); // After the store; see snooze.
     await tick();
   }
 

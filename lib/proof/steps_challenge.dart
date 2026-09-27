@@ -50,8 +50,12 @@ class _StepsViewState extends State<_StepsView> {
   }
 
   Future<void> _begin() async {
-    if (!await Permission.activityRecognition.request().isGranted) {
-      setState(() => _error = 'T.N.W.R. needs "Physical activity" permission to count steps. '
+    // iPhone calls it Motion & Fitness; activityRecognition is Android only.
+    final permission =
+        Platform.isIOS ? Permission.sensors : Permission.activityRecognition;
+    if (!await permission.request().isGranted) {
+      final name = Platform.isIOS ? 'Motion & Fitness' : 'Physical activity';
+      setState(() => _error = 'T.N.W.R. needs "$name" permission to count steps. '
           'Allow it in the phone settings.');
       return;
     }

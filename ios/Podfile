@@ -1,0 +1,63 @@
+# Uncomment this line to define a global platform for your project
+platform :ios, '16.0'
+
+# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  use_frameworks!
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+  end
+  use_mlkit_arm64_simulator_slices(installer)
+end
+
+# Apple-silicon iOS 26+ Simulators run arm64 only, and Google ML Kit ships no
+# arm64 simulator slice. tools/mlkit_arm64_sim.py makes one next to each
+# framework; simulator builds link those. Device builds (the .ipa) are unchanged.
+def use_mlkit_arm64_simulator_slices(installer)
+  pods = installer.sandbox.root.to_s
+  system('python3', File.join(__dir__, '..', 'tools', 'mlkit_arm64_sim.py'), pods) or
+    raise 'tools/mlkit_arm64_sim.py failed'
+  sim_paths = Dir.glob(File.join(pods, '*', 'Frameworks', '*.xcframework')).sort
+    .map { |x| %("#{x}/ios-arm64_x86_64-simulator") }.join(' ')
+  Dir.glob(File.join(pods, 'Target Support Files', '*', '*.xcconfig')).each do |path|
+    lines = File.read(path).lines.reject { |l| l.start_with?('EXCLUDED_ARCHS[sdk=iphonesimulator*] = arm64') }
+    lines = lines.flat_map do |l|
+      next [l] unless l.start_with?('FRAMEWORK_SEARCH_PATHS = ')
+      [l, l.sub('FRAMEWORK_SEARCH_PATHS = ', "FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*] = #{sim_paths} ")]
+    end
+    File.write(path, lines.join)
+  end
+end

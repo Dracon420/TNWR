@@ -9,15 +9,17 @@ import 'package:win32_registry/win32_registry.dart';
 ///   mode (MainActivity.kt).
 /// - Windows: any app using the microphone or webcam (Teams, Zoom, Discord,
 ///   Meet in a browser...), read from Windows' own privacy usage records.
-/// - iPhone (CXCallObserver) comes with the iOS alarm engine.
+/// - iPhone: phone calls, FaceTime and CallKit apps like WhatsApp
+///   (CXCallObserver in AlarmChain.swift).
 class CallDetector {
   static const _channel = MethodChannel('nag_alarm/calls');
 
-  bool get isSupported => Platform.isAndroid || Platform.isWindows;
+  bool get isSupported =>
+      Platform.isAndroid || Platform.isIOS || Platform.isWindows;
 
   Future<bool> isInCall() async {
     if (Platform.isWindows) return windowsMicOrCameraInUse();
-    if (!Platform.isAndroid) return false;
+    if (!Platform.isAndroid && !Platform.isIOS) return false;
     try {
       return await _channel.invokeMethod<bool>('isInCall') ?? false;
     } on PlatformException {

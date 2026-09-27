@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import '../alarm/alarm_engine.dart';
 import 'insets.dart';
 
-/// Checklist of what Android must allow for alarms to ring with the app
+/// Checklist of what the phone must allow for alarms to ring with the app
 /// closed. Re-checks whenever the user comes back from a settings page.
 class PhoneSetupScreen extends StatelessWidget {
   const PhoneSetupScreen({super.key, required this.engine});
 
-  final AndroidAlarmEngine engine;
+  final PhoneSetup engine;
 
   @override
   Widget build(BuildContext context) {
@@ -16,11 +16,11 @@ class PhoneSetupScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Phone setup')),
       body: _SetupStatus(
         engine: engine,
-        builder: (context, missing) => ListView(
+        builder: (context, status, note) => ListView(
           padding: screenListPadding(context),
           children: [
             Text(
-              missing.isEmpty
+              !status.containsValue(false)
                   ? 'All set. Alarms will ring even when T.N.W.R. is closed '
                       'or the phone is locked.'
                   : 'Allow these so alarms ring when T.N.W.R. is closed or the '
@@ -29,24 +29,29 @@ class PhoneSetupScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 16),
-            for (final item in SetupItem.values)
+            for (final MapEntry(key: item, value: done) in status.entries)
               Card(
                 child: ListTile(
                   leading: Icon(
-                    missing.contains(item)
-                        ? Icons.error_outline
-                        : Icons.check_circle,
-                    color: missing.contains(item)
-                        ? Theme.of(context).colorScheme.error
-                        : Colors.green,
+                    done ? Icons.check_circle : Icons.error_outline,
+                    color: done
+                        ? Colors.green
+                        : Theme.of(context).colorScheme.error,
                   ),
                   title: Text(item.title),
                   subtitle: Text(item.why),
-                  trailing: missing.contains(item)
-                      ? FilledButton(
+                  trailing: done
+                      ? null
+                      : FilledButton(
                           onPressed: () => engine.fixSetup(item),
-                          child: const Text('Fix'))
-                      : null,
+                          child: const Text('Fix')),
+                ),
+              ),
+            if (note != null)
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: Text(note),
                 ),
               ),
           ],
@@ -60,13 +65,15 @@ class PhoneSetupScreen extends StatelessWidget {
 class PhoneSetupBanner extends StatelessWidget {
   const PhoneSetupBanner({super.key, required this.engine});
 
-  final AndroidAlarmEngine engine;
+  final PhoneSetup engine;
 
   @override
   Widget build(BuildContext context) {
     return _SetupStatus(
       engine: engine,
-      builder: (context, missing) => missing.isEmpty
+      builder: (context, status, _) {
+        final missing = status.values.where((done) => !done).length;
+        return missing == 0
           ? const SizedBox.shrink()
           : Card(
               margin: const EdgeInsets.all(12),
@@ -75,13 +82,14 @@ class PhoneSetupBanner extends StatelessWidget {
                 leading: const Icon(Icons.warning_amber),
                 title: const Text('Finish phone setup'),
                 subtitle: Text(
-                    '${missing.length} thing${missing.length == 1 ? '' : 's'} '
+                    '$missing thing${missing == 1 ? '' : 's'} '
                     'to allow so alarms ring when T.N.W.R. is closed.'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => PhoneSetupScreen(engine: engine))),
               ),
-            ),
+            );
+      },
     );
   }
 }
@@ -89,8 +97,10 @@ class PhoneSetupBanner extends StatelessWidget {
 class _SetupStatus extends StatefulWidget {
   const _SetupStatus({required this.engine, required this.builder});
 
-  final AndroidAlarmEngine engine;
-  final Widget Function(BuildContext, Set<SetupItem> missing) builder;
+  final PhoneSetup engine;
+  final Widget Function(
+          BuildContext, Map<SetupItem, bool> status, String? note)
+      builder;
 
   @override
   State<_SetupStatus> createState() => _SetupStatusState();
@@ -98,7 +108,8 @@ class _SetupStatus extends StatefulWidget {
 
 class _SetupStatusState extends State<_SetupStatus>
     with WidgetsBindingObserver {
-  Set<SetupItem>? _missing;
+  Map<SetupItem, bool>? _status;
+  String? _note;
 
   @override
   void initState() {
@@ -119,12 +130,18 @@ class _SetupStatusState extends State<_SetupStatus>
   }
 
   Future<void> _refresh() async {
-    final missing = await widget.engine.missingSetup();
-    if (mounted) setState(() => _missing = missing);
+    final status = await widget.engine.setupStatus();
+    final note = await widget.engine.setupNote();
+    if (mounted) {
+      setState(() {
+        _status = status;
+        _note = note;
+      });
+    }
   }
 
   @override
-  Widget build(BuildContext context) => _missing == null
+  Widget build(BuildContext context) => _status == null
       ? const SizedBox.shrink()
-      : widget.builder(context, _missing!);
+      : widget.builder(context, _status!, _note);
 }

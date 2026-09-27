@@ -34,7 +34,11 @@ Future<void> main(List<String> args) async {
   final controller = AppController(store, Ringer(SystemVolume()),
       settings: settings,
       surface: shell,
-      engine: Platform.isAndroid ? AndroidAlarmEngine() : null)
+      engine: Platform.isAndroid
+          ? AndroidAlarmEngine()
+          : Platform.isIOS
+              ? IosAlarmEngine()
+              : null)
     ..start();
   final alexa = AlexaLink(store);
   unawaited(alexa.init()); // Network: don't hold up startup.

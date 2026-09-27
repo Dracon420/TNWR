@@ -20,12 +20,14 @@ String approvalMessage(String approverName, String taskTitle, String url) =>
     'Please check my photo and tap Approve or Not done: $url';
 
 /// sms: link that opens the messaging app with the text filled in.
-Uri smsUri(String phone, String body) => Uri(
-      scheme: 'sms',
-      path: phone.replaceAll(RegExp(r'[^\d+]'), ''),
-      // Explicit %20 encoding: some messaging apps show "+" for spaces.
-      query: 'body=${Uri.encodeComponent(body)}',
-    );
+Uri smsUri(String phone, String body, {bool? ios}) {
+  final number = phone.replaceAll(RegExp(r'[^\d+]'), '');
+  // Explicit %20 encoding: some messaging apps show "+" for spaces.
+  final text = Uri.encodeComponent(body);
+  // Messages on iPhone wants "&body=" right after the number.
+  if (ios ?? Platform.isIOS) return Uri.parse('sms:$number&body=$text');
+  return Uri(scheme: 'sms', path: number, query: 'body=$text');
+}
 
 class ApprovalChallenge extends ProofChallenge {
   const ApprovalChallenge(this.spec, {this.taskTitle = '', this.hold});
