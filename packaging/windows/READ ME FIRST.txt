@@ -1,0 +1,53 @@
+T.N.W.R. - The Naggy Wife Reminder  (Windows beta)
+==================================================
+
+A reminder that gets louder and louder until you PROVE the task is done.
+
+
+INSTALL (about 1 minute)
+------------------------
+1. Right-click the downloaded .zip file -> "Extract All..." -> Extract.
+   (Don't run it from inside the zip.)
+2. In the extracted folder, double-click  "Install TNWR".
+3. If Windows says "Windows protected your PC":
+   click "More info", then "Run anyway". (The beta isn't signed yet.)
+4. A black window shows the progress, then T.N.W.R. opens. Press any key
+   to close the black window.
+
+No admin rights needed. T.N.W.R. is added to the Start menu and your
+desktop, and starts by itself (hidden in the tray) when you sign in.
+
+
+USING IT
+--------
+- "New reminder" (bottom right): name it, pick a time, choose how
+  annoying it gets and how you have to prove it's done.
+- Try it: on any reminder, the three dots -> "Test: ring in 5 seconds".
+- When it rings, the alarm fills the screen and gets louder (it turns up
+  your PC's volume and turns it back down afterwards). Solve the proof to
+  stop it.
+- Closing the window just hides it in the tray (near the clock). Reminders
+  keep working. Right-click the tray icon -> Quit to exit completely.
+- On a Teams/Zoom/Discord call (mic or camera in use), a ringing alarm
+  waits until the call is over.
+- Settings (gear icon, top right): light/dark mode, call pausing, and
+  "Connect Alexa".
+
+
+IF SOMETHING GOES WRONG (beta!)
+-------------------------------
+If an alarm won't stop because of a glitch, hold the "Hold 10 s to cancel
+without proof" button on the alarm screen for 10 seconds, then confirm.
+
+Please tell whoever sent you T.N.W.R. what happened: what you did, what you expected, and
+what it did instead. A screenshot helps (Windows key + Shift + S).
+
+
+UPDATE / REMOVE
+---------------
+- Update: extract the new zip and run "Install TNWR" again. Your reminders
+  are kept.
+- Remove: open  %LOCALAPPDATA%\Programs\TNWR  (paste that into the File
+  Explorer address bar) and double-click "Uninstall TNWR". Your reminders
+  are kept in %APPDATA%\com.nagalarm in case you reinstall; delete that
+  folder too if you want them gone.

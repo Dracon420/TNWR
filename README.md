@@ -78,15 +78,22 @@ makes the next ring start louder.
 
 ### Windows
 
-A ready-to-run download is coming with the first beta release. Until then,
-build it from source (see [For developers](#for-developers)) and run
-`build\windows\x64\runner\Release\TNWR.exe`.
+Beta testers get **`TNWR-Windows-beta-<version>.zip`** (about 14 MB):
 
-- The first time you run it, Windows may show **"Windows protected your PC"**
-  because the beta isn't code-signed. Click **More info → Run anyway**.
-- After the first run of a **release build**, T.N.W.R. starts automatically
-  (hidden in the tray) whenever you sign in to Windows, so reminders still fire
-  after a reboot.
+1. Right-click the zip → **Extract All**, then open the extracted folder.
+2. Double-click **Install TNWR**. No admin rights are needed. It installs to
+   `%LOCALAPPDATA%\Programs\TNWR` and adds Start menu and desktop shortcuts.
+3. If Windows shows **"Windows protected your PC"**, click **More info → Run anyway**
+   (the beta isn't code-signed yet).
+
+After that, T.N.W.R. starts by itself (hidden in the tray) when you sign in, so
+reminders still fire after a reboot. Opening it again brings up the running copy
+instead of starting a second one. To update, run the new zip's installer (your
+reminders are kept). To remove it, run **Uninstall TNWR** in the install folder.
+The zip includes a plain-language **READ ME FIRST.txt**.
+
+To build the zip yourself: `powershell -ExecutionPolicy Bypass -File tools\package_windows.ps1`
+→ `dist\TNWR-Windows-beta-<version>.zip`.
 
 ### Android
 

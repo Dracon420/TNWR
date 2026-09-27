@@ -7,6 +7,28 @@
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
+#if !defined(_DEBUG)
+  // One copy at a time: a second launch (e.g. from the Start menu while the
+  // app sits in the tray) brings the running copy forward instead of starting
+  // another, which would make every alarm ring twice. Debug builds skip this
+  // so `flutter run` works next to an installed copy.
+  HANDLE single_instance =
+      ::CreateMutexW(nullptr, TRUE, L"Local\\TNWR-single-instance");
+  if (single_instance && ::GetLastError() == ERROR_ALREADY_EXISTS) {
+    // The login autostart (--minimized) stays quiet; a user launch shows it.
+    if (!wcsstr(command_line, L"--minimized")) {
+      HWND running =
+          ::FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"T.N.W.R.");
+      if (running) {
+        ::ShowWindow(running, SW_SHOW);
+        ::ShowWindow(running, SW_RESTORE);
+        ::SetForegroundWindow(running);
+      }
+    }
+    return EXIT_SUCCESS;
+  }
+#endif
+
   // Attach to console when present (e.g., 'flutter run') or create a
   // new console when running with a debugger.
   if (!::AttachConsole(ATTACH_PARENT_PROCESS) && ::IsDebuggerPresent()) {

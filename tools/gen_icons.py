@@ -38,7 +38,8 @@ def pixel(x, y):
     return ORANGE
 
 
-def png(size, path):
+def png(size, path=None):
+    """Renders the icon at size x size; writes it to path if given, returns the PNG bytes."""
     rows = []
     for py in range(size):
         row = bytearray([0])  # filter: none
@@ -61,11 +62,31 @@ def png(size, path):
     data += chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0))
     data += chunk(b"IDAT", zlib.compress(b"".join(rows), 9))
     data += chunk(b"IEND", b"")
-    path.write_bytes(data)
+    if path:
+        path.write_bytes(data)
+        print(f"wrote {path}")
+    return data
+
+
+def ico(sizes, path):
+    """Windows .ico holding one PNG per size (supported since Vista)."""
+    images = [png(s) for s in sizes]
+    header = struct.pack("<HHH", 0, 1, len(images))
+    offset = 6 + 16 * len(images)
+    entries = b""
+    for size, data in zip(sizes, images):
+        dim = 0 if size >= 256 else size  # 0 means 256 in the ICO format.
+        entries += struct.pack("<BBBBHHII", dim, dim, 0, 0, 1, 32, len(data), offset)
+        offset += len(data)
+    path.write_bytes(header + entries + b"".join(images))
     print(f"wrote {path}")
 
 
 if __name__ == "__main__":
+    root = Path(__file__).resolve().parent.parent
     OUT.mkdir(parents=True, exist_ok=True)
     png(108, OUT / "icon_108.png")
     png(512, OUT / "icon_512.png")
+    # Windows program icon (taskbar, Start menu, installer shortcuts) and tray icon.
+    ico([16, 24, 32, 48, 64, 256], root / "windows" / "runner" / "resources" / "app_icon.ico")
+    png(64, root / "assets" / "icons" / "tray.png")

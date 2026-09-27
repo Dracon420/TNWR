@@ -50,3 +50,7 @@ app.*.map.json
 # Alexa skill secrets (see alexa/lambda/config.example.js)
 alexa/lambda/config.js
 
+
+# Beta downloads built by tools/package_windows.ps1
+/dist/
+

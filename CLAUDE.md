@@ -79,6 +79,15 @@ over the `nag_alarm/alarms` MethodChannel (same contract on every platform:
 
 ## Change log (newest first)
 
+- **2026-09-27** (Windows session) Windows beta package: version 0.9.0+2;
+  `tools/package_windows.ps1` → `dist\TNWR-Windows-beta-<ver>.zip` (release
+  build + MSVC runtime DLLs + `packaging/windows/` installer, uninstaller,
+  READ ME FIRST). Per-user install to `%LOCALAPPDATA%\Programs\TNWR`, no admin.
+  Release builds allow **one running copy** (named mutex in
+  `windows/runner/main.cpp`; a second launch shows the running window).
+  New app/tray icon from `tools/gen_icons.py` (Android/iOS launcher icons are
+  still Flutter's default). Tested: install, launch twice, uninstall.
+
 - **2026-09-27** (Windows session) `test/emergency_cancel_test.dart` tearDown
   tolerates a temp file still open: Windows refuses to delete it (macOS
   allows it), which failed the test on the PC. Tests must pass on both
@@ -108,4 +117,5 @@ over the `nag_alarm/alarms` MethodChannel (same contract on every platform:
 
 - iPhone beta: `.ipa` sent to the tester (iPhone 16 Pro, iOS 26.6.2 → AlarmKit
   path). Waiting for their checklist results (docs/BETA_INSTALL.md).
-- Not done: Mac app, sync between phone and PC, one-click beta downloads.
+- Windows beta: zip built (`dist\`, not in git); to send to the tester.
+- Not done: Mac app, sync between phone and PC, Android/iOS launcher icons.
