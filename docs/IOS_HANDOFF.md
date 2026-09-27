@@ -1,5 +1,9 @@
 # iPhone version: hand-off plan
 
+> **Status (2026-09-27): done.** Built on the Mac and pushed (commit 6833995).
+> How it turned out, and what differs from this plan, is in
+> [CLAUDE.md](../CLAUDE.md#how-alarms-work-all-platforms). Kept for history.
+
 This is the plan for building the iOS version on the Mac. The Windows and
 Android versions (and Alexa, proofs, photo approval) are done; read
 [README.md](../README.md) first. **Start a Claude Code session in this repo on
