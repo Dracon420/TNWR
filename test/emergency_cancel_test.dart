@@ -41,7 +41,14 @@ void main() {
     await controller.tick();
   }
 
-  tearDown(() => dir.deleteSync(recursive: true));
+  tearDown(() {
+    try {
+      dir.deleteSync(recursive: true);
+    } on FileSystemException {
+      // Windows won't delete a file a save is still finishing on (macOS
+      // will). It's a temp folder, so leaving it is harmless.
+    }
+  });
 
   test(
     'cancelling stops the alarm without counting the task as done',

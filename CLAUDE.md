@@ -79,6 +79,15 @@ over the `nag_alarm/alarms` MethodChannel (same contract on every platform:
 
 ## Change log (newest first)
 
+- **2026-09-27** (Windows session) `test/emergency_cancel_test.dart` tearDown
+  tolerates a temp file still open: Windows refuses to delete it (macOS
+  allows it), which failed the test on the PC. Tests must pass on both
+  machines, so avoid leaving files open when a test ends.
+- **2026-09-26** (Windows session) Scrolling screens use
+  `screenListPadding()` ([lib/ui/insets.dart](lib/ui/insets.dart)): Android 15+
+  draws under the navigation bar, and a ListView with explicit padding doesn't
+  add room for it. Use it for any new full-screen list.
+
 - **2026-09-27** Emergency off (Mac session): alarm screen button
   "Hold 10 s to cancel without proof" → dialog "Are you sure you wish to
   cancel this alarm?" → `AppController.cancelRing`. Stops like a proof
