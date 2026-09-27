@@ -99,6 +99,9 @@ reminder set 2 minutes ahead. Tick what worked and describe what didn't:
 - [ ] **Stops after proof**: pass the proof. Nothing should ring for that
       reminder afterwards.
 - [ ] **Snooze**: comes back after the snooze time, louder.
+- [ ] **Emergency off**: hold **"Hold 10 s to cancel without proof"** for 10
+      seconds, then tap **Cancel alarm**. It should stop and not come back.
+      (Only for glitches; please tell us why you needed it.)
 - [ ] **Pauses during a call**: be on a phone or FaceTime/WhatsApp call when it
       comes due. It should wait until about 30 s after you hang up.
       (Most reliable while T.N.W.R. is open.)

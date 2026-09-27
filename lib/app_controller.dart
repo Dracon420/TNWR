@@ -39,8 +39,8 @@ class AppController extends ChangeNotifier {
     this.engine,
     CallDetector? calls,
     DateTime Function()? clock,
-  })  : _calls = calls ?? CallDetector(),
-        _now = clock ?? DateTime.now {
+  }) : _calls = calls ?? CallDetector(),
+       _now = clock ?? DateTime.now {
     store.addListener(_scheduleSync);
     settings.addListener(_scheduleSync);
   }
@@ -108,8 +108,9 @@ class AppController extends ChangeNotifier {
   @visibleForTesting
   Future<void> syncEngine() async {
     await engine?.sync(
-        store.tasks.where((t) => t.status == TaskStatus.scheduled).toList(),
-        settings);
+      store.tasks.where((t) => t.status == TaskStatus.scheduled).toList(),
+      settings,
+    );
   }
 
   @visibleForTesting
@@ -120,8 +121,10 @@ class AppController extends ChangeNotifier {
       final now = _now();
       for (final t in store.tasks) {
         if (t.status == TaskStatus.scheduled && !t.dueAt.isAfter(now)) {
-          await store.upsert(_freshRing(t).copyWith(
-              status: TaskStatus.ringing, ringingSince: () => now));
+          await store.upsert(
+            _freshRing(t)
+                .copyWith(status: TaskStatus.ringing, ringingSince: () => now),
+          );
         }
       }
 
@@ -150,8 +153,10 @@ class AppController extends ChangeNotifier {
         _enginePausedForCall = await engine!.isPausedForCall();
         // Only for display; the engine computes the real volume itself.
         current = escalationAt(
-            ringing.escalation, now.difference(ringing.ringingSince!),
-            snoozesUsed: ringing.snoozesUsed);
+          ringing.escalation,
+          now.difference(ringing.ringingSince!),
+          snoozesUsed: ringing.snoozesUsed,
+        );
         notifyListeners();
         return;
       }
@@ -161,8 +166,10 @@ class AppController extends ChangeNotifier {
 
       if (!ringer.isRinging) await surface?.onRinging();
       current = escalationAt(
-          ringing.escalation, now.difference(ringing.ringingSince!),
-          snoozesUsed: ringing.snoozesUsed);
+        ringing.escalation,
+        now.difference(ringing.ringingSince!),
+        snoozesUsed: ringing.snoozesUsed,
+      );
       await ringer.apply(current!);
       notifyListeners();
     } finally {
@@ -195,8 +202,9 @@ class AppController extends ChangeNotifier {
     // doesn't count toward escalation.
     final paused = now.difference(_pausedAt!);
     _pausedAt = _callEndedAt = null;
-    await store.upsert(ringing.copyWith(
-        ringingSince: () => ringing.ringingSince!.add(paused)));
+    await store.upsert(
+      ringing.copyWith(ringingSince: () => ringing.ringingSince!.add(paused)),
+    );
     return false;
   }
 
@@ -235,7 +243,9 @@ class AppController extends ChangeNotifier {
   Future<void> _shiftStart(String id, Duration by) async {
     final t = store.byId(id);
     if (t?.ringingSince == null) return;
-    await store.upsert(t!.copyWith(ringingSince: () => t.ringingSince!.add(by)));
+    await store.upsert(
+      t!.copyWith(ringingSince: () => t.ringingSince!.add(by)),
+    );
   }
 
   Future<void> _silence() async {
@@ -247,10 +257,10 @@ class AppController extends ChangeNotifier {
 
   /// Clears the proofs and approval of a previous ring.
   NagTask _freshRing(NagTask t) => t.copyWith(
-        passedProofs: const [],
-        pendingApprovalId: () => null,
-        pendingApprovalUrl: () => null,
-      );
+    passedProofs: const [],
+    pendingApprovalId: () => null,
+    pendingApprovalUrl: () => null,
+  );
 
   /// Saves that proof [index] of [t] passed, so it survives the app being
   /// closed, and completes the task once enough proofs have passed.
@@ -267,8 +277,9 @@ class AppController extends ChangeNotifier {
   /// Remembers (or with nulls, forgets) the photo approval being waited on.
   Future<void> savePendingApproval(NagTask t, String? id, String? url) async {
     final live = store.byId(t.id) ?? t;
-    await store.upsert(live.copyWith(
-        pendingApprovalId: () => id, pendingApprovalUrl: () => url));
+    await store.upsert(
+      live.copyWith(pendingApprovalId: () => id, pendingApprovalUrl: () => url),
+    );
   }
 
   bool canSnooze(NagTask t) => t.snoozesUsed < t.escalation.maxSnoozes;
@@ -277,37 +288,50 @@ class AppController extends ChangeNotifier {
     if (!canSnooze(t)) return;
     // Store first: a tick landing while the engine stops must not see the
     // task still ringing and start it again.
-    await store.upsert(_freshRing(t).copyWith(
-      status: TaskStatus.scheduled,
-      dueAt: _now().add(Duration(minutes: t.escalation.snoozeMinutes)),
-      ringingSince: () => null,
-      snoozesUsed: t.snoozesUsed + 1,
-    ));
+    await store.upsert(
+      _freshRing(t).copyWith(
+        status: TaskStatus.scheduled,
+        dueAt: _now().add(Duration(minutes: t.escalation.snoozeMinutes)),
+        ringingSince: () => null,
+        snoozesUsed: t.snoozesUsed + 1,
+      ),
+    );
     await engine?.stop(t.id);
     await tick();
   }
 
   /// Called once the task's proofs are satisfied.
-  Future<void> complete(NagTask t) async {
+  Future<void> complete(NagTask t) => _endRing(t, proven: true);
+
+  /// The emergency way out (a glitch, a proof that can't work): stops the
+  /// alarm like a proof would, without counting the task as done. A
+  /// repeating task moves on to its next time.
+  Future<void> cancelRing(NagTask t) => _endRing(t, proven: false);
+
+  Future<void> _endRing(NagTask t, {required bool proven}) async {
     final now = _now();
     final next = nextOccurrence(t.repeat, t.dueAt, now);
-    await store.upsert(_freshRing(t).copyWith(
-      status: next == null ? TaskStatus.done : TaskStatus.scheduled,
-      dueAt: next,
-      ringingSince: () => null,
-      snoozesUsed: 0,
-      completedAt: () => now,
-    ));
+    await store.upsert(
+      _freshRing(t).copyWith(
+        status: next == null ? TaskStatus.done : TaskStatus.scheduled,
+        dueAt: next,
+        ringingSince: () => null,
+        snoozesUsed: 0,
+        completedAt: proven ? () => now : null,
+      ),
+    );
     await engine?.stop(t.id); // After the store; see snooze.
     await tick();
   }
 
   /// Makes a task ring a few seconds from now, for trying out its settings.
-  Future<void> testRing(NagTask t) => store.upsert(_freshRing(t).copyWith(
-        status: TaskStatus.scheduled,
-        dueAt: _now().add(const Duration(seconds: 5)),
-        ringingSince: () => null,
-      ));
+  Future<void> testRing(NagTask t) => store.upsert(
+    _freshRing(t).copyWith(
+      status: TaskStatus.scheduled,
+      dueAt: _now().add(const Duration(seconds: 5)),
+      ringingSince: () => null,
+    ),
+  );
 
   @override
   void dispose() {

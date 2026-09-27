@@ -186,6 +186,11 @@ steps, and a photo of the finished task approved by someone you choose.*
   volume goes back to normal.
 - **Snooze** (if allowed) silences it for 5 minutes. When it comes back, it
   starts **louder** than before.
+- **Emergency off** (for a glitch, or a proof that can't work right now):
+  press and **hold "Hold 10 s to cancel without proof" for 10 seconds**, then
+  confirm **Cancel alarm**. Letting go early starts the count over. The task
+  isn't counted as done: a one-time reminder moves to **Done** (tap it to set
+  it again), a repeating one rings again at its next time.
 - **What doesn't work (on purpose):** the close button, Alt+F4, switching to
   another window (it comes back within about 3 seconds), turning the volume
   down or muting (it turns it back up within a second), and **Quit** in the
