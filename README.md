@@ -398,3 +398,9 @@ same rules as the Dart code), so it works with the app closed. The app tells
 it to stop once a proof passes. The
 app name lives in `lib/core/branding.dart`. The native
 display names are set in each platform folder.
+
+---
+
+## License
+
+[PolyForm Noncommercial 1.0.0](LICENSE.md). You're free to use, study and change it for personal, hobby, educational and other **noncommercial** purposes. **Commercial use, including selling it or running it as a paid service, isn't allowed** without a separate licence from the author; open an issue to ask.
